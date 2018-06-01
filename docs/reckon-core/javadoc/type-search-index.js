@@ -1,0 +1,1 @@
+typeSearchIndex = [{"p":"org.ajoberstar.reckon.core","l":"Reckoner"},{"p":"org.ajoberstar.reckon.core","l":"Reckoner.Builder"},{"p":"org.ajoberstar.reckon.core","l":"Scope"},{"p":"org.ajoberstar.reckon.core","l":"VcsInventory"},{"p":"org.ajoberstar.reckon.core","l":"Version"},{"p":"org.ajoberstar.reckon.core","l":"Version.Stage"}]
