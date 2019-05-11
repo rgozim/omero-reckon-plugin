@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.ajoberstar.reckon.core","l":"Reckoner.Builder"},{"p":"org.ajoberstar.reckon.core","l":"Reckoner"},{"p":"org.ajoberstar.reckon.core","l":"Scope"},{"p":"org.ajoberstar.reckon.core","l":"Version.Stage"},{"p":"org.ajoberstar.reckon.core","l":"VcsInventory"},{"p":"org.ajoberstar.reckon.core","l":"Version"}]
