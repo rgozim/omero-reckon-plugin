@@ -1,5 +1,7 @@
 package org.ajoberstar.reckon.gradle;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 import org.ajoberstar.grgit.Grgit;
@@ -25,6 +27,7 @@ public class ReckonExtension {
         .map(Repository::getJgit)
         .map(Git::getRepository)
         .orElse(null);
+
     this.reckoner.git(repo);
   }
 
@@ -41,7 +44,13 @@ public class ReckonExtension {
   }
 
   public ReckonExtension scopeFromProp() {
-    this.reckoner.scopeCalc(inventory -> findProperty(SCOPE_PROP));
+    return scopeFromProp("minor");
+  }
+
+  public ReckonExtension scopeFromProp(String scope) {
+    reckoner.scopeCalc(inventory -> Optional.of(
+            findProperty(SCOPE_PROP).orElse(scope))
+    );
     return this;
   }
 
@@ -52,12 +61,22 @@ public class ReckonExtension {
   }
 
   public ReckonExtension snapshotFromProp() {
+      return snapshotFromProp(Collections.emptyMap());
+  }
+
+  public ReckonExtension snapshotFromProp(Map<String, Object> options) {
+    String stage = (String) options.get("stage");
+    Boolean snapshot = (Boolean) options.get("snapshot");
+    return snapshotFromProp(stage, snapshot);
+  }
+
+  public ReckonExtension snapshotFromProp(String stage, Boolean snapshot) {
     this.reckoner.snapshots();
     this.reckoner.stageCalc((inventory, targetNormal) -> {
-      Optional<String> stageProp = findProperty(STAGE_PROP);
-      Optional<String> snapshotProp = findProperty(SNAPSHOT_PROP)
-          .map(Boolean::parseBoolean)
-          .map(isSnapshot -> isSnapshot ? "snapshot" : "final");
+      Optional<String> stageProp = Optional.ofNullable(findProperty(STAGE_PROP).orElse(stage));
+      Optional<String> snapshotProp = Optional.ofNullable(findProperty(SNAPSHOT_PROP).orElse(String.valueOf(snapshot)))
+              .map(Boolean::parseBoolean)
+              .map(isSnapshot -> isSnapshot ? "snapshot" : "final");
 
       snapshotProp.ifPresent(val -> {
         project.getLogger().warn("Property {} is deprecated and will be removed in 1.0.0. Use {} set to one of [snapshot, final].", SNAPSHOT_PROP, STAGE_PROP);
@@ -71,7 +90,6 @@ public class ReckonExtension {
   private Optional<String> findProperty(String name) {
     return Optional.ofNullable(project.findProperty(name))
         // composite builds have a parent Gradle build and can't trust the values of these properties
-        .filter(value -> project.getGradle().getParent() == null)
         .map(Object::toString);
   }
 
