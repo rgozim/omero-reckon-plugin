@@ -48,15 +48,13 @@ public class ReckonExtension {
   }
 
   public ReckonExtension scopeFromProp(String scope) {
-    reckoner.scopeCalc(inventory -> Optional.of(
-            findProperty(SCOPE_PROP).orElse(scope))
-    );
+    reckoner.scopeCalc(inventory -> findProperty(SCOPE_PROP, scope));
     return this;
   }
 
   public ReckonExtension stageFromProp(String... stages) {
     this.reckoner.stages(stages);
-    this.reckoner.stageCalc((inventory, targetNormal) -> findProperty(STAGE_PROP));
+    this.reckoner.stageCalc((inventory, targetNormal) -> findProperty(STAGE_PROP, null));
     return this;
   }
 
@@ -73,8 +71,9 @@ public class ReckonExtension {
   public ReckonExtension snapshotFromProp(String stage, Boolean snapshot) {
     this.reckoner.snapshots();
     this.reckoner.stageCalc((inventory, targetNormal) -> {
-      Optional<String> stageProp = Optional.ofNullable(findProperty(STAGE_PROP).orElse(stage));
-      Optional<String> snapshotProp = Optional.ofNullable(findProperty(SNAPSHOT_PROP).orElse(String.valueOf(snapshot)))
+
+      Optional<String> stageProp = findProperty(STAGE_PROP, stage);
+      Optional<String> snapshotProp = findProperty(SNAPSHOT_PROP, snapshot)
               .map(Boolean::parseBoolean)
               .map(isSnapshot -> isSnapshot ? "snapshot" : "final");
 
@@ -87,10 +86,9 @@ public class ReckonExtension {
     return this;
   }
 
-  private Optional<String> findProperty(String name) {
-    return Optional.ofNullable(project.findProperty(name))
-        // composite builds have a parent Gradle build and can't trust the values of these properties
-        .map(Object::toString);
+  private Optional<String> findProperty(String name, Object fallback) {
+     Object result = Optional.ofNullable(project.findProperty(name)).orElse(fallback);
+     return Optional.ofNullable(result).map(Object::toString);
   }
 
   Version reckonVersion() {
