@@ -8,10 +8,11 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 
+import javax.inject.Inject;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-public class DefaultStageOptions extends BaseStageOptions implements StageOptions {
+public class DefaultStageOptions implements StageOptions {
 
     protected Project project;
 
@@ -19,22 +20,27 @@ public class DefaultStageOptions extends BaseStageOptions implements StageOption
 
     protected final ListProperty<String> stages;
 
+    @Inject
     public DefaultStageOptions(Project project) {
         this.project = project;
         this.defaultStage = project.getObjects().property(String.class);
         this.stages = project.getObjects().listProperty(String.class);
 
         // Default to selecting the first stage alphabetically
-        this.defaultStage.convention(this.stages.map(strings -> strings.stream()
-                .sorted()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No stages supplied.")))
+        this.defaultStage.convention(this.stages.map(strings ->
+                strings.stream().sorted().findFirst().orElseThrow(
+                        () -> new IllegalArgumentException("No stages supplied.")))
         );
     }
 
     @Override
     public ListProperty<String> getStages() {
         return stages;
+    }
+
+    @Override
+    public Property<String> getDefaultStage() {
+        return defaultStage;
     }
 
     public BiFunction<VcsInventory, Version, Optional<String>> evaluateStage() {

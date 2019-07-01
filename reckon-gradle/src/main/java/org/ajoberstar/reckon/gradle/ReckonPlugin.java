@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ReckonPlugin implements Plugin<Project> {
+
+  public static final String RECKON_EXTENSION = "reckon";
+
   public static final String TAG_TASK = "reckonTagCreate";
   public static final String PUSH_TASK = "reckonTagPush";
 
@@ -38,15 +41,15 @@ public class ReckonPlugin implements Plugin<Project> {
 
     Grgit grgit = (Grgit) project.findProperty("grgit");
     DefaultReckonExtension reckon = (DefaultReckonExtension) project.getExtensions()
-            .create(ReckonExtension.class,"reckon", DefaultReckonExtension.class, project, grgit);
+            .create(ReckonExtension.class, RECKON_EXTENSION, DefaultReckonExtension.class, project);
     reckonVersion(grgit, reckon);
 
-    Task tag = createTagTask(project, reckon, grgit);
-    Task push = createPushTask(project, reckon, grgit, tag);
+    Task tag = createTagTask(project, grgit);
+    Task push = createPushTask(project, grgit, tag);
     push.dependsOn(tag);
   }
 
-  private Task createTagTask(Project project, DefaultReckonExtension extension, Grgit grgit) {
+  private Task createTagTask(Project project, Grgit grgit) {
     Task task = project.getTasks().create(TAG_TASK);
     task.setDescription("Tag version inferred by reckon.");
     task.setGroup("publishing");
@@ -68,7 +71,7 @@ public class ReckonPlugin implements Plugin<Project> {
     return task;
   }
 
-  private Task createPushTask(Project project, DefaultReckonExtension extension, Grgit grgit, Task create) {
+  private Task createPushTask(Project project, Grgit grgit, Task create) {
     Task task = project.getTasks().create(PUSH_TASK);
     task.setDescription("Push version tag created by reckon.");
     task.setGroup("publishing");
@@ -91,7 +94,8 @@ public class ReckonPlugin implements Plugin<Project> {
 
       Reckoner.Builder reckoner = Reckoner.builder()
               .git(repo)
-              .stages(reckonExt.getStageOptions().getStages().get().toArray(new String[0]))
+              .stages(reckonExt.getStageOptions().getStages().get())
+              .defaultStage(reckonExt.getStageOptions().getDefaultStage().get())
               .scopeCalc(reckonExt.getScopeOptions().evaluateScope())
               .stageCalc(reckonExt.getStageOptions().evaluateStage());
 

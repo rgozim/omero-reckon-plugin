@@ -11,6 +11,7 @@ import org.gradle.internal.Cast;
 import org.gradle.util.ConfigureUtil;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 
 public class DefaultReckonExtension implements ReckonExtension {
@@ -19,6 +20,7 @@ public class DefaultReckonExtension implements ReckonExtension {
     private DefaultScopeOptions scopeOptions;
     private DefaultStageOptions stageOptions;
 
+    @Inject
     public DefaultReckonExtension(Project project) {
         this.project = project;
 

@@ -4,7 +4,9 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -213,6 +215,16 @@ public final class Reckoner {
         throw new IllegalArgumentException("Snapshots are not supported in stage mode.");
       }
 
+      return this;
+    }
+
+    public Builder stages(Collection<String> stages) {
+      this.stages = new HashSet<>(stages);
+      return this;
+    }
+
+    public Builder defaultStage(String defaultStage) {
+      this.defaultStage = defaultStage;
       return this;
     }
 

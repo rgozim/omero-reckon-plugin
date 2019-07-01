@@ -20,10 +20,10 @@ public class DefaultSnapshotOptions extends DefaultStageOptions implements Snaps
         super(project);
         this.stages.addAll("snapshot", "final");
         this.snapshot = project.getObjects().property(Boolean.class);
-    }
 
-    public Property<Boolean> getSnapshot() {
-        return snapshot;
+        // Default to selecting the snapshot
+        this.defaultStage.convention("snapshot");
+        this.snapshot.convention(true);
     }
 
     @Override
@@ -45,6 +45,10 @@ public class DefaultSnapshotOptions extends DefaultStageOptions implements Snaps
 
             return stageProp.isPresent() ? stageProp : snapshotProp;
         };
+    }
+
+    public Property<Boolean> getSnapshot() {
+        return snapshot;
     }
 
 }
