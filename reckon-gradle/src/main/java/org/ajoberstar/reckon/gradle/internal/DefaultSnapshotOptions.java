@@ -7,19 +7,25 @@ import org.ajoberstar.reckon.gradle.SnapshotOptions;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 public class DefaultSnapshotOptions extends DefaultStageOptions implements SnapshotOptions {
 
-    private final Property<Boolean> snapshot;
+    final Property<Boolean> snapshot;
 
     @Inject
-    public DefaultSnapshotOptions(Project project) {
-        super(project);
-        this.stages.addAll("snapshot", "final");
+    public DefaultSnapshotOptions(Project project, @Nullable Map<String, ?> args) {
+        super(project, args);
+
         this.snapshot = project.getObjects().property(Boolean.class);
+
+        // Set stages to be snapshot and final
+        this.stages.set(Arrays.asList("snapshot", "final"));
 
         // Default to selecting the snapshot
         this.defaultStage.convention("snapshot");
@@ -27,14 +33,19 @@ public class DefaultSnapshotOptions extends DefaultStageOptions implements Snaps
     }
 
     @Override
+    public Property<Boolean> getSnapshot() {
+        return snapshot;
+    }
+
+    @Override
     public BiFunction<VcsInventory, Version, Optional<String>> evaluateStage() {
         return (inventory, targetNormal) -> {
 
             Optional<String> stageProp =
-                    PropertyUtil.findProperty(project, ReckonPlugin.STAGE_PROP, defaultStage.get());
+                    findProperty(ReckonPlugin.STAGE_PROP, defaultStage.get());
 
             Optional<String> snapshotProp =
-                    PropertyUtil.findProperty(project, ReckonPlugin.SNAPSHOT_PROP, snapshot.get())
+                    findProperty(ReckonPlugin.SNAPSHOT_PROP, snapshot.get())
                             .map(Boolean::parseBoolean)
                             .map(isSnapshot -> isSnapshot ? "snapshot" : "final");
 
@@ -46,9 +57,4 @@ public class DefaultSnapshotOptions extends DefaultStageOptions implements Snaps
             return stageProp.isPresent() ? stageProp : snapshotProp;
         };
     }
-
-    public Property<Boolean> getSnapshot() {
-        return snapshot;
-    }
-
 }

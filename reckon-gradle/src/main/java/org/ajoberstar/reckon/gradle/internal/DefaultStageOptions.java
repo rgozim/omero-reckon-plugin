@@ -7,30 +7,28 @@ import org.ajoberstar.reckon.gradle.StageOptions;
 import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.util.ConfigureUtil;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-public class DefaultStageOptions implements StageOptions {
-
-    protected Project project;
-
-    protected final Property<String> defaultStage;
-
-    protected final ListProperty<String> stages;
+public class DefaultStageOptions extends BaseStageOptions implements StageOptions {
 
     @Inject
-    public DefaultStageOptions(Project project) {
-        this.project = project;
-        this.defaultStage = project.getObjects().property(String.class);
-        this.stages = project.getObjects().listProperty(String.class);
+    public DefaultStageOptions(Project project, @Nullable Map<String, ?> args) {
+        super(project);
 
-        // Default to selecting the first stage alphabetically
-        this.defaultStage.convention(this.stages.map(strings ->
-                strings.stream().sorted().findFirst().orElseThrow(
-                        () -> new IllegalArgumentException("No stages supplied.")))
-        );
+        this.stages.convention(Arrays.asList("alpha", "beta", "rc", "final"));
+        this.defaultStage.convention(getDefaultStageConvention());
+
+        if (args != null) {
+            ConfigureUtil.configureByMap(args, this);
+        }
     }
 
     @Override
@@ -43,9 +41,20 @@ public class DefaultStageOptions implements StageOptions {
         return defaultStage;
     }
 
+    @Override
     public BiFunction<VcsInventory, Version, Optional<String>> evaluateStage() {
-        return (inventory, targetNormal) -> PropertyUtil.findProperty(
-                project, ReckonPlugin.STAGE_PROP, defaultStage.get());
+        return (inventory, targetNormal) -> findProperty(ReckonPlugin.STAGE_PROP, defaultStage.get());
+    }
+
+    /**
+     * Default to selecting the first stage alphabetically
+     *
+     * @return first stage alphabetically
+     */
+    private Provider<String> getDefaultStageConvention() {
+        return this.stages.map(strings ->
+                strings.stream().sorted().findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No stages supplied.")));
     }
 
 }

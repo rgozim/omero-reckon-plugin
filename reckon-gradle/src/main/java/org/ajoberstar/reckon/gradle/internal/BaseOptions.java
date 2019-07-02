@@ -4,9 +4,15 @@ import org.gradle.api.Project;
 
 import java.util.Optional;
 
-class PropertyUtil {
+abstract class BaseOptions {
 
-    static Optional<String> findProperty(Project project, String value, Object fallback) {
+    final Project project;
+
+    BaseOptions(Project project) {
+        this.project = project;
+    }
+
+    Optional<String> findProperty(String value, Object fallback) {
         Object result = Optional.ofNullable(project.findProperty(value)).orElse(fallback);
         return Optional.ofNullable(result).map(Object::toString);
     }

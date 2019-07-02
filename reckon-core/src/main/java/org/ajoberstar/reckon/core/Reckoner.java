@@ -200,7 +200,9 @@ public final class Reckoner {
      *
      * @param stages the valid stages
      * @return this builder
+     * @deprecated replaced by {@link #stages}
      */
+    @Deprecated
     public Builder stages(String... stages) {
       this.stages = Arrays.stream(stages)
           .map(String::toLowerCase)
@@ -218,11 +220,24 @@ public final class Reckoner {
       return this;
     }
 
+    /**
+     * Use the given stages as valid options during inference.
+     *
+     * @param stages the valid stages
+     * @return this builder
+     */
     public Builder stages(Collection<String> stages) {
       this.stages = new HashSet<>(stages);
       return this;
     }
 
+    /**
+     * Use the default stage to select the a stage from stages when building
+     * without command line arguments.
+     *
+     * @param defaultStage the stage to select
+     * @return this builder
+     */
     public Builder defaultStage(String defaultStage) {
       this.defaultStage = defaultStage;
       return this;
@@ -262,6 +277,11 @@ public final class Reckoner {
       Objects.requireNonNull(scopeCalc, "Must provide a scope supplier.");
       Objects.requireNonNull(stages, "Must provide set of stages.");
       Objects.requireNonNull(stageCalc, "Must provide a stage supplier.");
+
+      if (!stages.contains(defaultStage)) {
+        throw new NullPointerException("Supplied stages does not contain provided default.");
+      }
+
       return new Reckoner(clock, inventorySupplier, scopeCalc, stageCalc, stages, defaultStage);
     }
   }

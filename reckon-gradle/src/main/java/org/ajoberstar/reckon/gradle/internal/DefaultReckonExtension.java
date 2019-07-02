@@ -7,30 +7,37 @@ import org.ajoberstar.reckon.gradle.SnapshotOptions;
 import org.ajoberstar.reckon.gradle.StageOptions;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.internal.Cast;
 import org.gradle.util.ConfigureUtil;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import java.util.Collections;
+import java.util.Map;
 
 
 public class DefaultReckonExtension implements ReckonExtension {
 
-    private Project project;
+    private final Project project;
+    private final ObjectFactory objects;
+
     private DefaultScopeOptions scopeOptions;
     private DefaultStageOptions stageOptions;
 
-    @Inject
     public DefaultReckonExtension(Project project) {
         this.project = project;
+        this.objects = project.getObjects();
 
         this.scopeOptions =
-                project.getObjects().newInstance(DefaultScopeOptions.class, project);
+                objects.newInstance(DefaultScopeOptions.class, project, Collections.emptyMap());
 
         this.stageOptions =
-                project.getObjects().newInstance(DefaultStageOptions.class, project);
+                objects.newInstance(DefaultSnapshotOptions.class, project, Collections.emptyMap());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setNormal(ReckonExtension ext) {
         project.getLogger().warn("reckon.normal = scopeFromProp() is deprecated and will be removed in 1.0.0." +
@@ -38,6 +45,9 @@ public class DefaultReckonExtension implements ReckonExtension {
         // no op
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setPreRelease(ReckonExtension ext) {
         project.getLogger().warn("reckon.preRelease = stageFromProp() or snapshotFromProp() is deprecated " +
@@ -45,29 +55,76 @@ public class DefaultReckonExtension implements ReckonExtension {
         // no op
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scopeOptions(Map<String, ?> scopeOpts) {
+        this.scopeOptions = objects.newInstance(DefaultScopeOptions.class, project, scopeOpts);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void scopeOptions(Action<? super ScopeOptions> scopeOpts) {
         scopeOpts.execute(this.scopeOptions);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void scopeOptions(Closure scopeOpts) {
         stageOptions(ConfigureUtil.configureUsing(scopeOpts));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void stageOptions(Action<? super StageOptions> stageOpts) {
-        useStageOptions(new DefaultStageOptions(project), stageOpts);
+    public void stageOptions(Map<String, ?> stageOpts) {
+        this.stageOptions = objects.newInstance(DefaultStageOptions.class, project, stageOpts);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stageOptions(Action<? super StageOptions> stageOpts) {
+        useStageOptions(objects.newInstance(DefaultStageOptions.class, project, Collections.emptyMap()), stageOpts);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void stageOptions(Closure stageOpts) {
         stageOptions(ConfigureUtil.configureUsing(stageOpts));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void snapShotOptions() {
+        this.stageOptions = objects.newInstance(DefaultSnapshotOptions.class, project, Collections.emptyMap());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void snapShotOptions(Map<String, ?> snapshotOpts) {
+        this.stageOptions = objects.newInstance(DefaultSnapshotOptions.class, project, snapshotOpts);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void snapShotOptions(Action<? super SnapshotOptions> snapshotOpts) {
-        useStageOptions(new DefaultSnapshotOptions(project), snapshotOpts);
+        useStageOptions(objects.newInstance(DefaultSnapshotOptions.class, project, Collections.emptyMap()), snapshotOpts);
     }
 
     @Override
@@ -75,14 +132,26 @@ public class DefaultReckonExtension implements ReckonExtension {
         snapShotOptions(ConfigureUtil.configureUsing(stageOpts));
     }
 
+    /**
+     * @return the scope options created by dsl configuration
+     */
     public DefaultScopeOptions getScopeOptions() {
         return scopeOptions;
     }
 
+    /**
+     * @return the stage options created by dsl configuration
+     */
     public DefaultStageOptions getStageOptions() {
         return stageOptions;
     }
 
+    /**
+     * @param stageOptions
+     * @param stageOptionsConfigure
+     * @param <T>
+     * @return
+     */
     private <T extends StageOptions> DefaultStageOptions useStageOptions(
             DefaultStageOptions stageOptions, @Nullable Action<? super T> stageOptionsConfigure) {
         if (stageOptions == null) {
